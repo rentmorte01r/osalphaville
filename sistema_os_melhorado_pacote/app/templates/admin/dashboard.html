@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Sistema de Ordens de Serviço{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="page-header">
+            <i class="fas fa-user-shield me-2"></i>Painel Administrativo
+        </h2>
+    </div>
+</div>
+
+<!-- Estatísticas Gerais -->
+<div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+        <div class="card stat-card">
+            <div class="stat-icon text-primary">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value">{{ total_usuarios }}</div>
+            <div class="stat-label">Usuários</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+        <div class="card stat-card">
+            <div class="stat-icon text-success">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="stat-value">{{ total_condominios }}</div>
+            <div class="stat-label">Condomínios</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+        <div class="card stat-card">
+            <div class="stat-icon text-warning">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-value">{{ total_ordens }}</div>
+            <div class="stat-label">Ordens de Serviço</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card">
+            <div class="stat-icon text-danger">
+                <i class="fas fa-user-clock"></i>
+            </div>
+            <div class="stat-value">{{ usuarios_pendentes }}</div>
+            <div class="stat-label">Usuários Pendentes</div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Ações Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('admin.aprovar_usuarios') }}" class="btn btn-primary w-100 py-3">
+                            <i class="fas fa-user-check fa-2x mb-2"></i>
+                            <div>Aprovar Usuários</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('admin.cadastrar_condominio') }}" class="btn btn-success w-100 py-3">
+                            <i class="fas fa-building fa-2x mb-2"></i>
+                            <div>Novo Condomínio</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('admin.cadastrar_usuario') }}" class="btn btn-info w-100 py-3 text-white">
+                            <i class="fas fa-user-plus fa-2x mb-2"></i>
+                            <div>Novo Usuário</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('admin.relatorios') }}" class="btn btn-secondary w-100 py-3">
+                            <i class="fas fa-file-alt fa-2x mb-2"></i>
+                            <div>Relatórios</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Usuários Pendentes -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-user-clock me-2"></i>Usuários Pendentes</h5>
+                <a href="{{ url_for('admin.aprovar_usuarios') }}" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Condomínio</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usuario in usuarios_pendentes_lista %}
+                            <tr>
+                                <td>{{ usuario.name }}</td>
+                                <td>{{ usuario.email }}</td>
+                                <td>{{ usuario.condominio.nome }}</td>
+                                <td>{{ usuario.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin.aprovar_usuario', id=usuario.id) }}" class="btn btn-sm btn-success" title="Aprovar">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    <a href="{{ url_for('admin.rejeitar_usuario', id=usuario.id) }}" class="btn btn-sm btn-danger" title="Rejeitar">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3">Nenhum usuário pendente de aprovação.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Últimas Ordens -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Últimas Ordens</h5>
+                <a href="{{ url_for('ordens.listar') }}" class="btn btn-sm btn-outline-primary">Ver Todas</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Número</th>
+                                <th>Título</th>
+                                <th>Condomínio</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ordem in ultimas_ordens %}
+                            <tr>
+                                <td>{{ ordem.numero }}</td>
+                                <td>{{ ordem.titulo }}</td>
+                                <td>{{ ordem.condominio.nome }}</td>
+                                <td>
+                                    <span class="badge status-badge status-{{ ordem.status.lower().replace(' ', '-') }}">
+                                        {{ ordem.status }}
+                                    </span>
+                                </td>
+                                <td>{{ ordem.data_criacao.strftime('%d/%m/%Y') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3">Nenhuma ordem de serviço encontrada.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Gráfico de Usuários por Condomínio -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Usuários por Condomínio</h5>
+            </div>
+            <div class="card-body">
+                <div id="usuariosCondominioChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de Ordens por Status -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Ordens por Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="ordensStatusChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logs de Atividade -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Logs de Atividade Recentes</h5>
+                <a href="{{ url_for('admin.activity_logs') }}" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Usuário</th>
+                                <th>Ação</th>
+                                <th>Detalhes</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in activity_logs %}
+                            <tr>
+                                <td>{{ log.timestamp.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ log.user.name if log.user else 'Sistema' }}</td>
+                                <td>{{ log.action }}</td>
+                                <td>{{ log.details }}</td>
+                                <td>{{ log.ip_address }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3">Nenhum log de atividade encontrado.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gráfico de Usuários por Condomínio
+        var usuariosCondominioOptions = {
+            series: [{
+                name: 'Usuários',
+                data: {{ usuarios_por_condominio.data|tojson }}
+            }],
+            chart: {
+                type: 'bar',
+                height: 300
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    horizontal: true,
+                }
+            },
+            dataLabels: {
+                enabled: true
+            },
+            xaxis: {
+                categories: {{ usuarios_por_condominio.labels|tojson }},
+            },
+            colors: ['#0d6efd']
+        };
+        var usuariosCondominioChart = new ApexCharts(document.querySelector("#usuariosCondominioChart"), usuariosCondominioOptions);
+        usuariosCondominioChart.render();
+        
+        // Gráfico de Ordens por Status
+        var ordensStatusOptions = {
+            series: {{ ordens_por_status.data|tojson }},
+            chart: {
+                type: 'donut',
+                height: 300
+            },
+            labels: {{ ordens_por_status.labels|tojson }},
+            colors: ['#0dcaf0', '#ffc107', '#6f42c1', '#198754', '#dc3545'],
+            legend: {
+                position: 'bottom'
+            },
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    chart: {
+                        width: 200
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }]
+        };
+        var ordensStatusChart = new ApexCharts(document.querySelector("#ordensStatusChart"), ordensStatusOptions);
+        ordensStatusChart.render();
+    });
+</script>
+{% endblock %}
+{% endblock %}

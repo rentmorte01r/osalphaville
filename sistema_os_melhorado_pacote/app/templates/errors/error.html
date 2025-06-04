@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Erro {{ code }} - Sistema de Ordens de Serviço{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm text-center fade-in">
+            <div class="card-body p-5">
+                <div class="error-icon mb-4">
+                    {% if code == 404 %}
+                        <i class="fas fa-search fa-5x text-warning"></i>
+                    {% elif code == 403 %}
+                        <i class="fas fa-lock fa-5x text-danger"></i>
+                    {% elif code == 500 %}
+                        <i class="fas fa-exclamation-triangle fa-5x text-danger"></i>
+                    {% else %}
+                        <i class="fas fa-exclamation-circle fa-5x text-danger"></i>
+                    {% endif %}
+                </div>
+                
+                <h1 class="display-1 fw-bold text-danger">{{ code }}</h1>
+                
+                <h2 class="mb-4">{{ title }}</h2>
+                
+                <p class="lead mb-4">{{ message }}</p>
+                
+                <div class="mt-5">
+                    <a href="{{ url_for('ordens.painel') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home me-2"></i>Voltar ao Painel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

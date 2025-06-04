@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Painel - Sistema de Ordens de Serviço{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="page-header">
+            <i class="fas fa-tachometer-alt me-2"></i>Painel de Controle
+        </h2>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+        <div class="card stat-card">
+            <div class="stat-icon text-primary">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-value">{{ total_ordens }}</div>
+            <div class="stat-label">Total de Ordens</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+        <div class="card stat-card">
+            <div class="stat-icon text-info">
+                <i class="fas fa-hourglass-start"></i>
+            </div>
+            <div class="stat-value">{{ ordens_abertas }}</div>
+            <div class="stat-label">Ordens Abertas</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+        <div class="card stat-card">
+            <div class="stat-icon text-warning">
+                <i class="fas fa-spinner"></i>
+            </div>
+            <div class="stat-value">{{ ordens_andamento }}</div>
+            <div class="stat-label">Em Andamento</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card">
+            <div class="stat-icon text-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value">{{ ordens_concluidas }}</div>
+            <div class="stat-label">Concluídas</div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Ações Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if current_user.has_permission('create_order') %}
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('ordens.nova') }}" class="btn btn-primary w-100 py-3">
+                            <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                            <div>Nova Ordem</div>
+                        </a>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('ordens.listar') }}" class="btn btn-info w-100 py-3 text-white">
+                            <i class="fas fa-list fa-2x mb-2"></i>
+                            <div>Listar Ordens</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-success w-100 py-3">
+                            <i class="fas fa-chart-line fa-2x mb-2"></i>
+                            <div>Dashboard</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('dashboard.relatorios') }}" class="btn btn-secondary w-100 py-3">
+                            <i class="fas fa-file-alt fa-2x mb-2"></i>
+                            <div>Relatórios</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ordens Recentes -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Ordens Recentes</h5>
+                <a href="{{ url_for('ordens.listar') }}" class="btn btn-sm btn-outline-primary">Ver Todas</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Número</th>
+                                <th>Título</th>
+                                <th>Condomínio</th>
+                                <th>Status</th>
+                                <th>Prioridade</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ordem in ordens_recentes %}
+                            <tr>
+                                <td>{{ ordem.numero }}</td>
+                                <td>{{ ordem.titulo }}</td>
+                                <td>{{ ordem.condominio.nome }}</td>
+                                <td>
+                                    <span class="badge status-badge status-{{ ordem.status.lower().replace(' ', '-') }}">
+                                        {{ ordem.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="prioridade-{{ ordem.prioridade.lower() }}">
+                                        {{ ordem.prioridade }}
+                                    </span>
+                                </td>
+                                <td>{{ ordem.data_criacao.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <a href="{{ url_for('ordens.detalhe', id=ordem.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-3">Nenhuma ordem de serviço encontrada.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

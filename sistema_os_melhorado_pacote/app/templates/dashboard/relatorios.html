@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatórios - Sistema de Ordens de Serviço{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="page-header">
+            <i class="fas fa-file-alt me-2"></i>Relatórios
+        </h2>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-filter me-2"></i>Filtros
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('dashboard.relatorios') }}">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="condominio_id" class="form-label">Condomínio</label>
+                    <select name="condominio_id" id="condominio_id" class="form-select">
+                        <option value="">Todos</option>
+                        {% for condominio in condominios %}
+                            <option value="{{ condominio.id }}" {% if condominio_id == condominio.id|string %}selected{% endif %}>
+                                {{ condominio.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="tipo_relatorio" class="form-label">Tipo de Relatório</label>
+                    <select name="tipo_relatorio" id="tipo_relatorio" class="form-select">
+                        <option value="ordens_status" {% if tipo_relatorio == 'ordens_status' %}selected{% endif %}>Ordens por Status</option>
+                        <option value="ordens_area" {% if tipo_relatorio == 'ordens_area' %}selected{% endif %}>Ordens por Área</option>
+                        <option value="ordens_fornecedor" {% if tipo_relatorio == 'ordens_fornecedor' %}selected{% endif %}>Ordens por Fornecedor</option>
+                        <option value="ordens_tempo" {% if tipo_relatorio == 'ordens_tempo' %}selected{% endif %}>Tempo Médio de Conclusão</option>
+                        <option value="ordens_custo" {% if tipo_relatorio == 'ordens_custo' %}selected{% endif %}>Custos por Tipo de Ordem</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="periodo" class="form-label">Período</label>
+                    <select name="periodo" id="periodo" class="form-select">
+                        <option value="7" {% if periodo == '7' %}selected{% endif %}>Últimos 7 dias</option>
+                        <option value="30" {% if periodo == '30' %}selected{% endif %}>Últimos 30 dias</option>
+                        <option value="90" {% if periodo == '90' %}selected{% endif %}>Últimos 90 dias</option>
+                        <option value="180" {% if periodo == '180' %}selected{% endif %}>Últimos 6 meses</option>
+                        <option value="365" {% if periodo == '365' %}selected{% endif %}>Último ano</option>
+                        <option value="0" {% if periodo == '0' %}selected{% endif %}>Todo o período</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="data_inicial" class="form-label">Data Inicial</label>
+                    <input type="date" name="data_inicial" id="data_inicial" class="form-control" value="{{ data_inicial }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="data_final" class="form-label">Data Final</label>
+                    <input type="date" name="data_final" id="data_final" class="form-control" value="{{ data_final }}">
+                </div>
+                <div class="col-md-4 mb-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>Gerar Relatório
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resultados do Relatório -->
+{% if dados_relatorio %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ titulo_relatorio }}</h5>
+        <div>
+            <a href="{{ url_for('dashboard.exportar_pdf') }}?{{ request.query_string.decode() }}" class="btn btn-danger btn-sm">
+                <i class="fas fa-file-pdf me-1"></i>PDF
+            </a>
+            <a href="{{ url_for('dashboard.exportar_excel') }}?{{ request.query_string.decode() }}" class="btn btn-success btn-sm ms-2">
+                <i class="fas fa-file-excel me-1"></i>Excel
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Gráfico do Relatório -->
+        <div class="mb-4">
+            <div id="relatorioChart" style="height: 400px;"></div>
+        </div>
+        
+        <!-- Tabela de Dados -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        {% for coluna in colunas_relatorio %}
+                            <th>{{ coluna }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for linha in dados_relatorio %}
+                    <tr>
+                        {% for valor in linha %}
+                            <td>{{ valor }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Resumo do Relatório -->
+        <div class="alert alert-info mt-4">
+            <h6 class="mb-3"><i class="fas fa-info-circle me-2"></i>Resumo</h6>
+            <ul class="mb-0">
+                {% for item in resumo_relatorio %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>Selecione os filtros e clique em "Gerar Relatório" para visualizar os dados.
+</div>
+{% endif %}
+
+{% block extra_js %}
+{% if dados_relatorio %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configuração do gráfico baseado no tipo de relatório
+        var chartOptions = {
+            series: {{ series_chart|tojson }},
+            chart: {
+                type: '{{ tipo_grafico }}',
+                height: 400,
+                toolbar: {
+                    show: true,
+                    tools: {
+                        download: true,
+                        selection: true,
+                        zoom: true,
+                        zoomin: true,
+                        zoomout: true,
+                        pan: true,
+                        reset: true
+                    }
+                }
+            },
+            labels: {{ labels_chart|tojson }},
+            colors: ['#0d6efd', '#20c997', '#fd7e14', '#6610f2', '#d63384', '#0dcaf0', '#ffc107', '#198754', '#dc3545'],
+            legend: {
+                position: 'bottom'
+            },
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    chart: {
+                        width: '100%'
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }]
+        };
+        
+        // Adicionar configurações específicas baseadas no tipo de gráfico
+        {% if tipo_grafico == 'bar' %}
+        chartOptions.plotOptions = {
+            bar: {
+                horizontal: {{ 'true' if horizontal_bar else 'false' }},
+                columnWidth: '55%',
+                endingShape: 'rounded'
+            }
+        };
+        chartOptions.dataLabels = {
+            enabled: true
+        };
+        {% endif %}
+        
+        var relatorioChart = new ApexCharts(document.querySelector("#relatorioChart"), chartOptions);
+        relatorioChart.render();
+    });
+</script>
+{% endif %}
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,435 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Sistema de Ordens de Serviço{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="page-header">
+            <i class="fas fa-chart-bar me-2"></i>Dashboard
+        </h2>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-filter me-2"></i>Filtros
+            <button class="btn btn-sm btn-link float-end" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </h5>
+    </div>
+    <div class="collapse" id="collapseFilters">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('dashboard.index') }}">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="condominio_id" class="form-label">Condomínio</label>
+                        <select name="condominio_id" id="condominio_id" class="form-select">
+                            <option value="">Todos</option>
+                            {% for condominio in condominios %}
+                                <option value="{{ condominio.id }}" {% if condominio_id == condominio.id|string %}selected{% endif %}>
+                                    {{ condominio.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="periodo" class="form-label">Período</label>
+                        <select name="periodo" id="periodo" class="form-select">
+                            <option value="7" {% if periodo == '7' %}selected{% endif %}>Últimos 7 dias</option>
+                            <option value="30" {% if periodo == '30' %}selected{% endif %}>Últimos 30 dias</option>
+                            <option value="90" {% if periodo == '90' %}selected{% endif %}>Últimos 90 dias</option>
+                            <option value="180" {% if periodo == '180' %}selected{% endif %}>Últimos 6 meses</option>
+                            <option value="365" {% if periodo == '365' %}selected{% endif %}>Último ano</option>
+                            <option value="0" {% if periodo == '0' %}selected{% endif %}>Todo o período</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>Filtrar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas Gerais -->
+<div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+        <div class="card stat-card">
+            <div class="stat-icon text-primary">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-value">{{ total_ordens }}</div>
+            <div class="stat-label">Total de Ordens</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+        <div class="card stat-card">
+            <div class="stat-icon text-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value">{{ ordens_concluidas }}</div>
+            <div class="stat-label">Concluídas</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+        <div class="card stat-card">
+            <div class="stat-icon text-warning">
+                <i class="fas fa-spinner"></i>
+            </div>
+            <div class="stat-value">{{ ordens_andamento }}</div>
+            <div class="stat-label">Em Andamento</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card">
+            <div class="stat-icon text-danger">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="stat-value">{{ ordens_atrasadas }}</div>
+            <div class="stat-label">Atrasadas</div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row mb-4">
+    <!-- Gráfico de Status -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Distribuição por Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="statusChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de Tipos -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Distribuição por Tipo</h5>
+            </div>
+            <div class="card-body">
+                <div id="tipoChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de Ordens por Mês -->
+    <div class="col-lg-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Ordens por Mês</h5>
+            </div>
+            <div class="card-body">
+                <div id="ordemPorMesChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de Tempo Médio de Conclusão -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Tempo Médio de Conclusão (dias)</h5>
+            </div>
+            <div class="card-body">
+                <div id="tempoMedioChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de Ordens por Prioridade -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Ordens por Prioridade</h5>
+            </div>
+            <div class="card-body">
+                <div id="prioridadeChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Áreas com Mais Ordens -->
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4 mb-lg-0">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Top Áreas com Mais Ordens</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Área</th>
+                                <th>Condomínio</th>
+                                <th>Quantidade</th>
+                                <th>% do Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for area in top_areas %}
+                            <tr>
+                                <td>{{ area.nome }}</td>
+                                <td>{{ area.condominio_nome }}</td>
+                                <td>{{ area.quantidade }}</td>
+                                <td>{{ "%.1f"|format(area.percentual) }}%</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">Nenhum dado disponível</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Fornecedores -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Top Fornecedores</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fornecedor</th>
+                                <th>Ordens</th>
+                                <th>Valor Total</th>
+                                <th>Média por Ordem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fornecedor in top_fornecedores %}
+                            <tr>
+                                <td>{{ fornecedor.nome }}</td>
+                                <td>{{ fornecedor.quantidade }}</td>
+                                <td>R$ {{ "%.2f"|format(fornecedor.valor_total)|replace(".", ",") }}</td>
+                                <td>R$ {{ "%.2f"|format(fornecedor.media_valor)|replace(".", ",") }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">Nenhum dado disponível</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botões de Ação -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-end">
+            <a href="{{ url_for('dashboard.exportar_pdf') }}?condominio_id={{ condominio_id }}&periodo={{ periodo }}" class="btn btn-danger me-2">
+                <i class="fas fa-file-pdf me-1"></i>Exportar PDF
+            </a>
+            <a href="{{ url_for('dashboard.exportar_excel') }}?condominio_id={{ condominio_id }}&periodo={{ periodo }}" class="btn btn-success">
+                <i class="fas fa-file-excel me-1"></i>Exportar Excel
+            </a>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gráfico de Status
+        var statusOptions = {
+            series: {{ status_data|tojson }},
+            chart: {
+                type: 'donut',
+                height: 300
+            },
+            labels: {{ status_labels|tojson }},
+            colors: ['#0dcaf0', '#ffc107', '#6f42c1', '#198754', '#dc3545'],
+            legend: {
+                position: 'bottom'
+            },
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    chart: {
+                        width: 200
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }]
+        };
+        var statusChart = new ApexCharts(document.querySelector("#statusChart"), statusOptions);
+        statusChart.render();
+        
+        // Gráfico de Tipos
+        var tipoOptions = {
+            series: {{ tipo_data|tojson }},
+            chart: {
+                type: 'donut',
+                height: 300
+            },
+            labels: {{ tipo_labels|tojson }},
+            colors: ['#0d6efd', '#20c997', '#fd7e14', '#6610f2', '#d63384'],
+            legend: {
+                position: 'bottom'
+            },
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    chart: {
+                        width: 200
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }]
+        };
+        var tipoChart = new ApexCharts(document.querySelector("#tipoChart"), tipoOptions);
+        tipoChart.render();
+        
+        // Gráfico de Ordens por Mês
+        var ordemPorMesOptions = {
+            series: [{
+                name: 'Ordens Abertas',
+                data: {{ ordens_por_mes.abertas|tojson }}
+            }, {
+                name: 'Ordens Concluídas',
+                data: {{ ordens_por_mes.concluidas|tojson }}
+            }],
+            chart: {
+                type: 'bar',
+                height: 300,
+                stacked: false,
+                toolbar: {
+                    show: false
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded'
+                },
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: {{ ordens_por_mes.meses|tojson }},
+            },
+            yaxis: {
+                title: {
+                    text: 'Quantidade'
+                }
+            },
+            fill: {
+                opacity: 1
+            },
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        return val + " ordens"
+                    }
+                }
+            },
+            colors: ['#0d6efd', '#198754']
+        };
+        var ordemPorMesChart = new ApexCharts(document.querySelector("#ordemPorMesChart"), ordemPorMesOptions);
+        ordemPorMesChart.render();
+        
+        // Gráfico de Tempo Médio de Conclusão
+        var tempoMedioOptions = {
+            series: [{
+                name: 'Tempo Médio (dias)',
+                data: {{ tempo_medio_data|tojson }}
+            }],
+            chart: {
+                type: 'bar',
+                height: 300
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    horizontal: true,
+                }
+            },
+            dataLabels: {
+                enabled: true
+            },
+            xaxis: {
+                categories: {{ tempo_medio_labels|tojson }},
+            },
+            colors: ['#20c997']
+        };
+        var tempoMedioChart = new ApexCharts(document.querySelector("#tempoMedioChart"), tempoMedioOptions);
+        tempoMedioChart.render();
+        
+        // Gráfico de Ordens por Prioridade
+        var prioridadeOptions = {
+            series: [{
+                name: 'Quantidade',
+                data: {{ prioridade_data|tojson }}
+            }],
+            chart: {
+                type: 'bar',
+                height: 300
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    horizontal: false,
+                    columnWidth: '55%',
+                    distributed: true
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            legend: {
+                show: false
+            },
+            xaxis: {
+                categories: {{ prioridade_labels|tojson }},
+            },
+            colors: ['#dc3545', '#ffc107', '#0dcaf0']
+        };
+        var prioridadeChart = new ApexCharts(document.querySelector("#prioridadeChart"), prioridadeOptions);
+        prioridadeChart.render();
+        
+        // Manter filtros expandidos se houver algum filtro aplicado
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('condominio_id') || urlParams.has('periodo')) {
+            var filterCollapse = new bootstrap.Collapse(document.getElementById('collapseFilters'), {
+                toggle: true
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

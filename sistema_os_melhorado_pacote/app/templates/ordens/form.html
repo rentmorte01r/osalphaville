@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block title %}Nova Ordem de Serviço - Sistema de Ordens de Serviço{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="page-header">
+            <i class="fas fa-plus-circle me-2"></i>Nova Ordem de Serviço
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card shadow-sm fade-in">
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('ordens.nova') }}" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom pb-2 mb-3">Informações Básicas</h5>
+                        </div>
+                        
+                        <div class="col-md-8 mb-3">
+                            <label for="titulo" class="form-label required-field">Título</label>
+                            {{ form.titulo(class="form-control", placeholder="Título da ordem de serviço") }}
+                            {% if form.titulo.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.titulo.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="condominio_id" class="form-label required-field">Condomínio</label>
+                            {{ form.condominio_id(class="form-select", id="condominio_id") }}
+                            {% if form.condominio_id.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.condominio_id.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="area_id" class="form-label">Área</label>
+                            {{ form.area_id(class="form-select", id="area_id") }}
+                            {% if form.area_id.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.area_id.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="prioridade" class="form-label required-field">Prioridade</label>
+                            {{ form.prioridade(class="form-select") }}
+                            {% if form.prioridade.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.prioridade.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="tipo" class="form-label required-field">Tipo</label>
+                            {{ form.tipo(class="form-select") }}
+                            {% if form.tipo.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.tipo.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-12 mb-3">
+                            <label for="descricao" class="form-label required-field">Descrição</label>
+                            {{ form.descricao(class="form-control", rows=5, placeholder="Descreva detalhadamente o problema ou serviço necessário...") }}
+                            {% if form.descricao.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.descricao.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom pb-2 mb-3">Informações Adicionais</h5>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="fornecedor_id" class="form-label">Fornecedor</label>
+                            {{ form.fornecedor_id(class="form-select") }}
+                            {% if form.fornecedor_id.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.fornecedor_id.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="valor_estimado" class="form-label">Valor Estimado (R$)</label>
+                            {{ form.valor_estimado(class="form-control", placeholder="0,00") }}
+                            {% if form.valor_estimado.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.valor_estimado.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="data_previsao" class="form-label">Data Prevista</label>
+                            {{ form.data_previsao(class="form-control", type="date") }}
+                            {% if form.data_previsao.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.data_previsao.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-12 mb-3">
+                            <label for="observacoes" class="form-label">Observações</label>
+                            {{ form.observacoes(class="form-control", rows=3, placeholder="Observações adicionais...") }}
+                            {% if form.observacoes.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.observacoes.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom pb-2 mb-3">Anexos</h5>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="foto_inicial" class="form-label">Foto Inicial</label>
+                            {{ form.foto_inicial(class="form-control") }}
+                            {% if form.foto_inicial.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.foto_inicial.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Formatos aceitos: JPG, PNG, JPEG</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="cotacao" class="form-label">Cotação</label>
+                            {{ form.cotacao(class="form-control") }}
+                            {% if form.cotacao.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.cotacao.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Formatos aceitos: PDF, JPG, PNG, JPEG</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('ordens.listar') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancelar
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Carregar áreas quando o condomínio for selecionado
+    document.addEventListener('DOMContentLoaded', function() {
+        const condominioSelect = document.getElementById('condominio_id');
+        const areaSelect = document.getElementById('area_id');
+        
+        if (condominioSelect && areaSelect) {
+            condominioSelect.addEventListener('change', function() {
+                const condominioId = this.value;
+                
+                if (condominioId) {
+                    // Limpar select de áreas
+                    areaSelect.innerHTML = '<option value="0">Selecione...</option>';
+                    
+                    // Buscar áreas do condomínio
+                    fetch(`/ordens/areas-por-condominio/${condominioId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(area => {
+                                const option = document.createElement('option');
+                                option.value = area.id;
+                                option.textContent = area.nome;
+                                areaSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => console.error('Erro ao carregar áreas:', error));
+                }
+            });
+            
+            // Disparar evento change se já houver um condomínio selecionado
+            if (condominioSelect.value) {
+                const event = new Event('change');
+                condominioSelect.dispatchEvent(event);
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

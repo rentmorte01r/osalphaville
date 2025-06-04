@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}Ordens de Serviço - Sistema de Ordens de Serviço{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="page-header">
+            <i class="fas fa-clipboard-list me-2"></i>Ordens de Serviço
+        </h2>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-filter me-2"></i>Filtros
+            <button class="btn btn-sm btn-link float-end" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </h5>
+    </div>
+    <div class="collapse" id="collapseFilters">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('ordens.listar') }}">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="condominio_id" class="form-label">Condomínio</label>
+                        {{ form.condominio_id(class="form-select") }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        {{ form.status(class="form-select") }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="prioridade" class="form-label">Prioridade</label>
+                        {{ form.prioridade(class="form-select") }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="data_inicial" class="form-label">Data Inicial</label>
+                        {{ form.data_inicial(class="form-control", type="date") }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="data_final" class="form-label">Data Final</label>
+                        {{ form.data_final(class="form-control", type="date") }}
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <a href="{{ url_for('ordens.listar') }}" class="btn btn-secondary me-2">Limpar</a>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Ordens -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Ordens de Serviço</h5>
+        {% if current_user.has_permission('create_order') %}
+        <a href="{{ url_for('ordens.nova') }}" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i>Nova Ordem
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Título</th>
+                        <th>Condomínio</th>
+                        <th>Status</th>
+                        <th>Prioridade</th>
+                        <th>Data</th>
+                        <th>Responsável</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ordem in ordens.items %}
+                    <tr>
+                        <td>{{ ordem.numero }}</td>
+                        <td>{{ ordem.titulo }}</td>
+                        <td>{{ ordem.condominio.nome }}</td>
+                        <td>
+                            <span class="badge status-badge status-{{ ordem.status.lower().replace(' ', '-') }}">
+                                {{ ordem.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="prioridade-{{ ordem.prioridade.lower() }}">
+                                {{ ordem.prioridade }}
+                            </span>
+                        </td>
+                        <td>{{ ordem.data_criacao.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if ordem.user %}
+                                {{ ordem.user.name }}
+                            {% else %}
+                                <span class="text-muted">Não atribuído</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('ordens.detalhe', id=ordem.id) }}" class="btn btn-sm btn-primary" title="Visualizar">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if current_user.has_permission('edit_order') %}
+                                <a href="{{ url_for('ordens.editar', id=ordem.id) }}" class="btn btn-sm btn-warning" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                                {% if current_user.has_permission('delete_order') %}
+                                <a href="#" class="btn btn-sm btn-danger" title="Excluir" 
+                                   onclick="confirmarExclusao('{{ url_for('ordens.excluir', id=ordem.id) }}', '{{ ordem.numero }}')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-3">Nenhuma ordem de serviço encontrada.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                Mostrando {{ ordens.items|length }} de {{ ordens.total }} ordens
+            </div>
+            <nav aria-label="Paginação">
+                <ul class="pagination mb-0">
+                    {% if ordens.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('ordens.listar', page=ordens.prev_num, condominio_id=condominio_id, status=status, prioridade=prioridade, data_inicial=data_inicial, data_final=data_final) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in ordens.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num == ordens.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('ordens.listar', page=page_num, condominio_id=condominio_id, status=status, prioridade=prioridade, data_inicial=data_inicial, data_final=data_final) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if ordens.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('ordens.listar', page=ordens.next_num, condominio_id=condominio_id, status=status, prioridade=prioridade, data_inicial=data_inicial, data_final=data_final) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir a ordem <strong id="ordemNumero"></strong>?</p>
+                <p class="text-danger">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a href="#" id="confirmDeleteBtn" class="btn btn-danger">Excluir</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function confirmarExclusao(url, numero) {
+        document.getElementById('ordemNumero').textContent = numero;
+        document.getElementById('confirmDeleteBtn').href = url;
+        var modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+        modal.show();
+    }
+    
+    // Manter filtros expandidos se houver algum filtro aplicado
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('condominio_id') || urlParams.has('status') || 
+            urlParams.has('prioridade') || urlParams.has('data_inicial') || 
+            urlParams.has('data_final')) {
+            var filterCollapse = new bootstrap.Collapse(document.getElementById('collapseFilters'), {
+                toggle: true
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Ordem #{{ ordem.numero }} - Sistema de Ordens de Serviço{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('ordens.painel') }}">Painel</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('ordens.listar') }}">Ordens</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ ordem.numero }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Detalhes da Ordem -->
+    <div class="col-lg-8 mb-4">
+        <div class="card ordem-detalhe fade-in">
+            <div class="ordem-header">
+                <div>
+                    <h4 class="ordem-titulo">{{ ordem.titulo }}</h4>
+                    <div class="text-muted">Criada em {{ ordem.data_criacao.strftime('%d/%m/%Y às %H:%M') }}</div>
+                </div>
+                <div class="ordem-numero">
+                    {{ ordem.numero }}
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Status</div>
+                        <span class="badge status-badge status-{{ ordem.status.lower().replace(' ', '-') }}">
+                            {{ ordem.status }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Prioridade</div>
+                        <span class="prioridade-{{ ordem.prioridade.lower() }}">
+                            {{ ordem.prioridade }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Tipo</div>
+                        {{ ordem.tipo }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Condomínio</div>
+                        {{ ordem.condominio.nome }}
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Área</div>
+                        {{ ordem.area.nome if ordem.area else 'Não especificada' }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Responsável</div>
+                        {{ ordem.user.name if ordem.user else 'Não atribuído' }}
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Fornecedor</div>
+                        {{ ordem.fornecedor.nome if ordem.fornecedor else 'Não especificado' }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Data de Início</div>
+                        {{ ordem.data_inicio.strftime('%d/%m/%Y') if ordem.data_inicio else 'Não iniciada' }}
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Previsão</div>
+                        {{ ordem.data_previsao.strftime('%d/%m/%Y') if ordem.data_previsao else 'Não definida' }}
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Conclusão</div>
+                        {{ ordem.data_conclusao.strftime('%d/%m/%Y') if ordem.data_conclusao else 'Não concluída' }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Valor Estimado</div>
+                        {{ "R$ {:.2f}".format(ordem.valor_estimado)|replace(".", ",") if ordem.valor_estimado else 'Não definido' }}
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="ordem-info-item">
+                        <div class="ordem-info-label">Valor Final</div>
+                        {{ "R$ {:.2f}".format(ordem.valor_final)|replace(".", ",") if ordem.valor_final else 'Não definido' }}
+                    </div>
+                </div>
+            </div>
+            
+            <h5 class="mb-3">Descrição</h5>
+            <div class="ordem-descricao mb-4">
+                {{ ordem.descricao|nl2br }}
+            </div>
+            
+            {% if ordem.observacoes %}
+            <h5 class="mb-3">Observações</h5>
+            <div class="ordem-descricao mb-4">
+                {{ ordem.observacoes|nl2br }}
+            </div>
+            {% endif %}
+            
+            <h5 class="mb-3">Imagens</h5>
+            <div class="row mb-4">
+                {% if ordem.foto_inicial %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-header">Foto Inicial</div>
+                        <div class="card-body text-center">
+                            <a href="{{ url_for('static', filename='uploads/' + ordem.foto_inicial) }}" target="_blank">
+                                <img src="{{ url_for('static', filename='uploads/' + ordem.foto_inicial) }}" class="img-fluid ordem-imagem" alt="Foto Inicial">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if ordem.foto_andamento %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-header">Foto Andamento</div>
+                        <div class="card-body text-center">
+                            <a href="{{ url_for('static', filename='uploads/' + ordem.foto_andamento) }}" target="_blank">
+                                <img src="{{ url_for('static', filename='uploads/' + ordem.foto_andamento) }}" class="img-fluid ordem-imagem" alt="Foto Andamento">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if ordem.foto_final %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-header">Foto Final</div>
+                        <div class="card-body text-center">
+                            <a href="{{ url_for('static', filename='uploads/' + ordem.foto_final) }}" target="_blank">
+                                <img src="{{ url_for('static', filename='uploads/' + ordem.foto_final) }}" class="img-fluid ordem-imagem" alt="Foto Final">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if not ordem.foto_inicial and not ordem.foto_andamento and not ordem.foto_final %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        Nenhuma imagem disponível para esta ordem.
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if ordem.cotacao %}
+            <h5 class="mb-3">Cotação</h5>
+            <div class="mb-4">
+                <div class="anexo-item">
+                    <i class="fas fa-file-pdf anexo-icon"></i>
+                    <a href="{{ url_for('static', filename='uploads/' + ordem.cotacao) }}" target="_blank">
+                        Visualizar cotação
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('ordens.listar') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar
+                </a>
+                <div>
+                    {% if current_user.has_permission('edit_order') %}
+                    <a href="{{ url_for('ordens.editar', id=ordem.id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit me-1"></i>Editar
+                    </a>
+                    {% endif %}
+                    
+                    {% if current_user.has_permission('edit_order') and ordem.status != 'Concluída' and ordem.status != 'Cancelada' %}
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#statusModal">
+                        <i class="fas fa-check-circle me-1"></i>Atualizar Status
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Atualização de Status -->
+        {% if current_user.has_permission('edit_order') and ordem.status != 'Concluída' and ordem.status != 'Cancelada' %}
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Atualizar Status</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('ordens.atualizar_status', id=ordem.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Novo Status</label>
+                        <select name="status" id="status" class="form-select" required>
+                            <option value="">Selecione...</option>
+                            <option value="Aberta" {% if ordem.status == 'Aberta' %}selected{% endif %}>Aberta</option>
+                            <option value="Em Andamento" {% if ordem.status == 'Em Andamento' %}selected{% endif %}>Em Andamento</option>
+                            <option value="Aguardando Aprovação" {% if ordem.status == 'Aguardando Aprovação' %}selected{% endif %}>Aguardando Aprovação</option>
+                            <option value="Aguardando Material" {% if ordem.status == 'Aguardando Material' %}selected{% endif %}>Aguardando Material</option>
+                            <option value="Concluída" {% if ordem.status == 'Concluída' %}selected{% endif %}>Concluída</option>
+                            <option value="Cancelada" {% if ordem.status == 'Cancelada' %}selected{% endif %}>Cancelada</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="observacao" class="form-label">Observação</label>
+                        <textarea name="observacao" id="observacao" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i>Salvar Status
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Histórico de Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Histórico de Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    {% for log in ordem.status_logs %}
+                    <div class="timeline-item">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ log.status_novo }}</strong>
+                            <small class="text-muted">{{ log.data_mudanca.strftime('%d/%m/%Y %H:%M') }}</small>
+                        </div>
+                        <div class="text-muted">Por: {{ log.usuario.name }}</div>
+                        {% if log.observacao %}
+                        <div class="mt-2 small">{{ log.observacao }}</div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        Nenhum histórico disponível.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comentários -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Comentários</h5>
+            </div>
+            <div class="card-body">
+                {% for comentario in ordem.comentarios %}
+                <div class="comentario">
+                    <div class="comentario-header">
+                        <span class="comentario-autor">{{ comentario.usuario.name }}</span>
+                        <span class="comentario-data">{{ comentario.data_criacao.strftime('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+                    <div class="comentario-texto">
+                        {{ comentario.texto|nl2br }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    Nenhum comentário disponível.
+                </div>
+                {% endfor %}
+                
+                <form method="POST" action="{{ url_for('ordens.detalhe', id=ordem.id) }}" class="mt-4">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="texto" class="form-label">Novo Comentário</label>
+                        {{ form.texto(class="form-control", rows=3, placeholder="Digite seu comentário...") }}
+                        {% if form.texto.errors %}
+                            <div class="text-danger">
+                                {% for error in form.texto.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
